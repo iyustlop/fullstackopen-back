@@ -27,7 +27,10 @@ let persons = [
 ]
 
 app.use(express.json())
-app.use(morgan('tiny'))
+
+morgan.token('body', (res) => JSON.stringify(res.body));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
+
 
 app.get('/info', (request, response) => {
     const time = new Date();
@@ -59,7 +62,7 @@ app.delete('/api/persons/:id', (request, response) => {
 
 const generateId = () => {
     const maxId = persons.length > 0
-        ? Math.floor(Math.random()*1000)
+        ? Math.floor(Math.random() * 1000)
         : 0
     return maxId
 }
@@ -73,7 +76,7 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    if (!body.number){
+    if (!body.number) {
         return response.status(400).json({
             error: 'number is missing'
         })
