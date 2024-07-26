@@ -28,8 +28,13 @@ const favoriteBlog = (blogs) => {
   return objetoCopiado
 }
 
+const mostBlogs = (blogs) => {
+
+}
+
 module.exports = {
   dummy,
   totalLikes,
-  favoriteBlog
+  favoriteBlog,
+  mostBlogs
 }

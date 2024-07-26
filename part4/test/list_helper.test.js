@@ -1,4 +1,4 @@
-const { test, describe}  = require('node:test')
+const { test, describe }  = require('node:test')
 const assert = require('node:assert')
 const listHelper = require('../utils/list_helper')
 
@@ -63,7 +63,6 @@ const blogs = [
     __v: 0
   }
 ]
-
 
 describe('dummy test', () => {
   test('dummy returns one', () => {
