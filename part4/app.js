@@ -9,7 +9,7 @@ const mongoose = require('mongoose')
 
 mongoose.set('strictQuery', false)
 mongoose.connect(config.MONGODB_URI)
-  .then(()=>{
+  .then(() => {
     logger.info('connected to MongoDB')
   })
   .catch((error) => {
@@ -17,7 +17,7 @@ mongoose.connect(config.MONGODB_URI)
   })
 
 app.use(cors())
-app.use(express.json()) 
+app.use(express.json())
 app.use(middleware.requestLogger)
 
 app.use('/api/blogs', blogsRouter)

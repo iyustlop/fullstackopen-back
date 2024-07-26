@@ -15,6 +15,7 @@
         "stylistic"
     ],
     "rules": {
-        "stylistic/semi": ["error", "always"]
+        "stylistic/semi": ["error", "always"],
+        "no-trailing-spaces": "error"
     }
 }
