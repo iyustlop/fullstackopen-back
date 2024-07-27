@@ -42,6 +42,14 @@ describe ('Blogs test for fullstackopen', () => {
     assert(titles.includes('HTML is easy'))
   })
 
+  test('check property id', async () => {
+    const response = await api
+      .get('/api/blogs')
+
+    const ids =  response.body.map(e => e.id)
+    assert(ids.length >0)
+  })
+
   test('a valid blog can be added ', async () => {
     const newBlog = {
       title: 'async/await simplifies making async calls',
