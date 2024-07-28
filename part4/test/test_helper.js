@@ -5,7 +5,7 @@ const initialBlogs = [
     'title': 'HTML is easy',
     'author': 'iyustlop',
     'url': 'https://www.tumblr.com/blog/iyustlop',
-    'likes': 0,
+    'likes': 10,
   },
   {
     'title': 'FDV',

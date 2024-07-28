@@ -154,6 +154,29 @@ describe ('Blogs test for fullstackopen', () => {
 
   })
 
+  describe('update options for blogs', () => {
+    test('the number of likes of one test is updates', async () => {
+      const blogsAtStart = await helper.blogsInDb()
+      const originalBlog = blogsAtStart.filter(blog => blog.likes === 0)
+      const likes = 15
+
+      const blogWithNewValue = {
+        title: originalBlog[0].title,
+        author: originalBlog[0].author,
+        url: originalBlog[0].url,
+        likes: likes
+      }
+
+      await api
+        .put(`/api/blogs/${originalBlog[0].id}`)
+        .send(blogWithNewValue)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      const updatedBlog = blogsAtEnd.filter(blog => blog.title === blogWithNewValue.title)
+      assert.strictEqual(updatedBlog[0].likes, likes)
+    })
+  })
+
   after(async () => {
     await mongoose.connection.close()
   })
