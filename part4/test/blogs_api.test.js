@@ -8,13 +8,10 @@ const helper = require('./test_helper')
 
 beforeEach(async () => {
   await Blogs.deleteMany({})
-  console.log('cleared')
 
   const blogsObjects = helper.initialBlogs.map(blog => new Blogs(blog))
   const promiseArray = blogsObjects.map(blogs => blogs.save())
   await Promise.all(promiseArray)
-
-  console.log('done')
 })
 
 const api = supertest(app)
@@ -90,10 +87,27 @@ describe ('Blogs test for fullstackopen', () => {
 
   })
 
-  test('blog without likes is not added', async () => {
+  test('blog without author is not added ans return 400', async () => {
     const newBlog = {
       title: 'async/await simplifies making async calls',
-      author: 'FDV'
+      url: 'https://www.tumblr.com/blog/iyustlop',
+      likes: 0,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+  })
+
+  test('blog without title is not added ans return 400', async () => {
+    const newBlog = {
+      author: 'FDV',
+      url: 'https://www.tumblr.com/blog/iyustlop',
+      likes: 0,
     }
 
     await api
