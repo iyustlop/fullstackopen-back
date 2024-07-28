@@ -31,12 +31,11 @@ describe ('Blogs test for fullstackopen', () => {
       .expect('Content-Type', /application\/json/)
   })
 
-  test('the first blog is about HTTP methods', async () => {
+  test('a specific blog is within the returned blogs', async () => {
     const response = await api.get('/api/blogs')
 
-    const titles = response.body.map(e => e.title)
-    // es el argumento truthy
-    assert(titles.includes('HTML is easy'))
+    const contents = response.body.map(r => r.title)
+    assert(contents.includes('HTML is easy'))
   })
 
   test('check property id', async () => {
@@ -47,105 +46,112 @@ describe ('Blogs test for fullstackopen', () => {
     assert(ids.length >0)
   })
 
-  test('a valid blog can be added ', async () => {
-    const newBlog = {
-      title: 'async/await simplifies making async calls',
-      author: 'FDV',
-      url: 'https://www.tumblr.com/blog/iyustlop',
-      likes: 0,
-    }
+  describe('viewing a specific note', () => {
+    test('a specific blog can be viewed', async () => {
+      const blogsAtStart = await helper.blogsInDb()
 
-    await api
-      .post('/api/blogs')
-      .send(newBlog)
-      .expect(201)
-      .expect('Content-Type', /application\/json/)
+      const blogToView = blogsAtStart[0]
 
-    const blogsAtEnd = await helper.blogsInDb()
+      const resultBlogs = await api
+        .get(`/api/blogs/${blogToView.id}`)
+        .expect(200)
+        .expect('Content-Type', /application\/json/)
 
-    const titles = blogsAtEnd.map(n => n.title)
-    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1)
-    assert(titles.includes(newBlog.title))
+      assert.deepStrictEqual(resultBlogs.body, blogToView)
+    })
   })
 
-  test('blog without likes returns default value 0', async () => {
-    const newBlog = {
-      title: 'async/await simplifies making async calls',
-      author: 'FDV',
-      url: 'https://www.tumblr.com/blog/iyustlop',
-    }
+  describe('addition of a new note', () => {
+    test('a valid blog can be added ', async () => {
+      const newBlog = {
+        title: 'async/await simplifies making async calls',
+        author: 'FDV',
+        url: 'https://www.tumblr.com/blog/iyustlop',
+        likes: 0,
+      }
 
-    await api
-      .post('/api/blogs')
-      .send(newBlog)
-      .expect(201)
-      .expect('Content-Type', /application\/json/)
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
 
-    const blogsAtEnd = await helper.blogsInDb()
-    const blogFromDB = blogsAtEnd.filter(blog => blog.title === newBlog.title)
-    assert.strictEqual(blogFromDB[0].likes,0)
+      const blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1)
 
+      const titles = blogsAtEnd.map(n => n.title)
+      assert(titles.includes(newBlog.title))
+    })
+
+    test('blog without likes returns default value 0', async () => {
+      const newBlog = {
+        title: 'async/await simplifies making async calls',
+        author: 'FDV',
+        url: 'https://www.tumblr.com/blog/iyustlop',
+      }
+
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      const blogFromDB = blogsAtEnd.filter(blog => blog.title === newBlog.title)
+      assert.strictEqual(blogFromDB[0].likes,0)
+
+    })
+
+    test('blog without author is not added ans return 400', async () => {
+      const newBlog = {
+        title: 'async/await simplifies making async calls',
+        url: 'https://www.tumblr.com/blog/iyustlop',
+        likes: 0,
+      }
+
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(400)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+    })
+
+    test('blog without title is not added ans return 400', async () => {
+      const newBlog = {
+        author: 'FDV',
+        url: 'https://www.tumblr.com/blog/iyustlop',
+        likes: 0,
+      }
+
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(400)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+    })
   })
 
-  test('blog without author is not added ans return 400', async () => {
-    const newBlog = {
-      title: 'async/await simplifies making async calls',
-      url: 'https://www.tumblr.com/blog/iyustlop',
-      likes: 0,
-    }
+  describe('deletion of a blogs', () => {
+    test('a blog can be deleted', async () => {
+      const blogsAtStart = await helper.blogsInDb()
+      const blogsToDelete = blogsAtStart[0]
 
-    await api
-      .post('/api/blogs')
-      .send(newBlog)
-      .expect(400)
+      await api
+        .delete(`/api/blogs/${blogsToDelete.id}`)
+        .expect(204)
 
-    const blogsAtEnd = await helper.blogsInDb()
-    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
-  })
+      const blogsAtEnd = await helper.blogsInDb()
 
-  test('blog without title is not added ans return 400', async () => {
-    const newBlog = {
-      author: 'FDV',
-      url: 'https://www.tumblr.com/blog/iyustlop',
-      likes: 0,
-    }
+      const titles = blogsAtEnd.map(r => r.title)
+      assert(!titles.includes(blogsToDelete.content))
 
-    await api
-      .post('/api/blogs')
-      .send(newBlog)
-      .expect(400)
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1)
+    })
 
-    const blogsAtEnd = await helper.blogsInDb()
-    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
-  })
-
-  test('a specific blog can be viewed', async () => {
-    const blogsAtStart = await helper.blogsInDb()
-
-    const blogToView = blogsAtStart[0]
-
-    const resultBlogs = await api
-      .get(`/api/blogs/${blogToView.id}`)
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
-
-    assert.deepStrictEqual(resultBlogs.body, blogToView)
-  })
-
-  test('a blog can be deleted', async () => {
-    const blogsAtStart = await helper.blogsInDb()
-    const blogsToDelete = blogsAtStart[0]
-
-    await api
-      .delete(`/api/blogs/${blogsToDelete.id}`)
-      .expect(204)
-
-    const blogsAtEnd = await helper.blogsInDb()
-
-    const titles = blogsAtEnd.map(r => r.title)
-    assert(!titles.includes(blogsToDelete.content))
-
-    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1)
   })
 
   after(async () => {
