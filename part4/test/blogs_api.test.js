@@ -68,10 +68,10 @@ describe ('Blogs test for fullstackopen', () => {
 
     const titles = blogsAtEnd.map(n => n.title)
     assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1)
-    assert(titles.includes('async/await simplifies making async calls'))
+    assert(titles.includes(newBlog.title))
   })
 
-  test('blog without likes is not added', async () => {
+  test('blog without likes returns default value 0', async () => {
     const newBlog = {
       title: 'async/await simplifies making async calls',
       author: 'FDV',
@@ -81,11 +81,28 @@ describe ('Blogs test for fullstackopen', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    const blogFromDB = blogsAtEnd.filter(blog => blog.title === newBlog.title)
+    assert.strictEqual(blogFromDB[0].likes,0)
+
+  })
+
+  test('blog without likes is not added', async () => {
+    const newBlog = {
+      title: 'async/await simplifies making async calls',
+      author: 'FDV'
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
       .expect(400)
 
     const blogsAtEnd = await helper.blogsInDb()
     assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
-
   })
 
   test('a specific blog can be viewed', async () => {
