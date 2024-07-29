@@ -64,36 +64,38 @@ const blogs = [
   }
 ]
 
-describe('dummy test', () => {
-  test('dummy returns one', () => {
-    const blogs = []
+describe('list helper test', () => {
+  describe('dummy test', () => {
+    test('dummy returns one', () => {
+      const blogs = []
 
-    const result = listHelper.dummy(blogs)
-    assert.strictEqual(result, 1)
-  })
-})
-
-describe('total likes tests', () => {
-  test('when list has only one blog, equals the likes of that', () => {
-    const result = listHelper.totalLikes(listWithOneBlog)
-    assert.strictEqual(result, 5)
+      const result = listHelper.dummy(blogs)
+      assert.strictEqual(result, 1)
+    })
   })
 
-  test('when list more than one blog, equals the likes of that', () => {
-    const result = listHelper.totalLikes(blogs)
-    assert.strictEqual(result, 36)
+  describe('total likes tests', () => {
+    test('when list has only one blog, equals the likes of that', () => {
+      const result = listHelper.totalLikes(listWithOneBlog)
+      assert.strictEqual(result, 5)
+    })
+
+    test('when list more than one blog, equals the likes of that', () => {
+      const result = listHelper.totalLikes(blogs)
+      assert.strictEqual(result, 36)
+    })
   })
-})
 
-describe ('list helper tests', () => {
-  const result= {
-    title: 'Canonical string reduction',
-    author: 'Edsger W. Dijkstra',
-    likes: 12
-  }
+  describe ('list helper tests', () => {
+    const result= {
+      title: 'Canonical string reduction',
+      author: 'Edsger W. Dijkstra',
+      likes: 12
+    }
 
-  test('check the result expected and returned is the same', () => {
-    const maxBlog = listHelper.favoriteBlog(blogs)
-    assert.deepStrictEqual(maxBlog, result)
+    test('check the result expected and returned is the same', () => {
+      const maxBlog = listHelper.favoriteBlog(blogs)
+      assert.deepStrictEqual(maxBlog, result)
+    })
   })
 })
