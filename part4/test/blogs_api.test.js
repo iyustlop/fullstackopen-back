@@ -72,11 +72,13 @@ describe ('Blogs test for fullstackopen Part 4', () => {
 
   describe('addition of a new note', () => {
     test('a valid blog can be added ', async () => {
+      const user = await helper.usersInDb()
       const newBlog = {
         title: 'async/await simplifies making async calls',
         author: 'FDV',
         url: 'https://www.tumblr.com/blog/iyustlop',
         likes: 0,
+        user: user[0].id
       }
 
       await api
@@ -93,10 +95,12 @@ describe ('Blogs test for fullstackopen Part 4', () => {
     })
 
     test('blog without likes returns default value 0', async () => {
+      const user = await helper.usersInDb()
       const newBlog = {
         title: 'async/await simplifies making async calls',
         author: 'FDV',
         url: 'https://www.tumblr.com/blog/iyustlop',
+        user: user[0].id
       }
 
       await api
@@ -218,27 +222,27 @@ describe('when there is initially one user in db', () => {
     const usernames = usersAtEnd.map(u => u.username)
     assert(usernames.includes(newUser.username))
   })
-})
 
-test('creation fails with proper statuscode and message if username already taken', async () => {
-  const usersAtStart = await helper.usersInDb()
+  test('creation fails with proper statuscode and message if username already taken', async () => {
+    const usersAtStart = await helper.usersInDb()
 
-  const newUser = {
-    username: 'root',
-    name: 'Superuser',
-    password: 'salainen',
-  }
+    const newUser = {
+      username: 'root',
+      name: 'Superuser',
+      password: 'salainen',
+    }
 
-  const result = await api
-    .post('/api/users')
-    .send(newUser)
-    .expect(400)
-    .expect('Content-Type', /application\/json/)
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
 
-  const usersAtEnd = await helper.usersInDb()
-  assert(result.body.error.includes('expected `username` to be unique'))
+    const usersAtEnd = await helper.usersInDb()
+    assert(result.body.error.includes('expected `username` to be unique'))
 
-  assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+  })
 })
 
 after(async () => {
