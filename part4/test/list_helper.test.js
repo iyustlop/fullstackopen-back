@@ -65,15 +65,6 @@ const blogs = [
 ]
 
 describe('list helper test', () => {
-  describe('dummy test', () => {
-    test('dummy returns one', () => {
-      const blogs = []
-
-      const result = listHelper.dummy(blogs)
-      assert.strictEqual(result, 1)
-    })
-  })
-
   describe('total likes tests', () => {
     test('when list has only one blog, equals the likes of that', () => {
       const result = listHelper.totalLikes(listWithOneBlog)
@@ -97,5 +88,17 @@ describe('list helper test', () => {
       const maxBlog = listHelper.favoriteBlog(blogs)
       assert.deepStrictEqual(maxBlog, result)
     })
+  })
+
+  test('author with the large number of blogs', () => {
+    const result = { author: 'Robert C. Martin', blogs: 3 }
+    const mostBlogs = listHelper.mostBlogs(blogs)
+    assert.deepStrictEqual(mostBlogs, result)
+  })
+
+  test('author with the large number of likes', () => {
+    const result = { author: 'Edsger W. Dijkstra', likes: 17 }
+    const mostBlogs = listHelper.mostLikes(blogs)
+    assert.deepStrictEqual(mostBlogs, result)
   })
 })
