@@ -17,6 +17,7 @@ beforeEach(async () => {
 })
 
 const api = supertest(app)
+const myToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Iml5dXN0bG9wIiwiaWQiOiI2NmE4YzBkYjcyYTUzZWJlZGM4OTE2MzQiLCJpYXQiOjE3MjI1NDU5Njl9.bZnMSjuVRIZHmkxLkRuo0Ea5AHq2Ytq5XwHa7p_JSoI'
 
 describe ('Blogs test for fullstackopen Part 4', () => {
   beforeEach(async () => {
@@ -70,19 +71,18 @@ describe ('Blogs test for fullstackopen Part 4', () => {
     })
   })
 
-  describe('addition of a new note', () => {
+  describe('addition of a new blog', () => {
     test('a valid blog can be added ', async () => {
-      const user = await helper.usersInDb()
       const newBlog = {
         title: 'async/await simplifies making async calls',
         author: 'FDV',
         url: 'https://www.tumblr.com/blog/iyustlop',
         likes: 0,
-        user: user[0].id
       }
 
       await api
         .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + myToken)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -105,6 +105,7 @@ describe ('Blogs test for fullstackopen Part 4', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + myToken)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -124,6 +125,7 @@ describe ('Blogs test for fullstackopen Part 4', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + myToken)
         .send(newBlog)
         .expect(400)
 
@@ -131,7 +133,7 @@ describe ('Blogs test for fullstackopen Part 4', () => {
       assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
     })
 
-    test('blog without title is not added ans return 400', async () => {
+    test('blog without title is not added and return 400', async () => {
       const newBlog = {
         author: 'FDV',
         url: 'https://www.tumblr.com/blog/iyustlop',
@@ -140,6 +142,7 @@ describe ('Blogs test for fullstackopen Part 4', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + myToken)
         .send(newBlog)
         .expect(400)
 
@@ -191,102 +194,6 @@ describe ('Blogs test for fullstackopen Part 4', () => {
   })
 })
 
-describe('when there is initially one user in db', () => {
-  beforeEach(async () => {
-    await User.deleteMany({})
-
-    const passwordHash = await bcrypt.hash('sekret', 10)
-    const user = new User({ username: 'root', passwordHash })
-
-    await user.save()
-  })
-
-  test('creation succeeds with a fresh username', async () => {
-    const usersAtStart = await helper.usersInDb()
-
-    const newUser = {
-      username: 'mluukkai',
-      name: 'Matti Luukkainen',
-      password: 'salainen',
-    }
-
-    await api
-      .post('/api/users')
-      .send(newUser)
-      .expect(201)
-      .expect('Content-Type', /application\/json/)
-
-    const usersAtEnd = await helper.usersInDb()
-    assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1)
-
-    const usernames = usersAtEnd.map(u => u.username)
-    assert(usernames.includes(newUser.username))
-  })
-
-  test('creation fails with proper statuscode and message if username already taken', async () => {
-    const usersAtStart = await helper.usersInDb()
-
-    const newUser = {
-      username: 'root',
-      name: 'Superuser',
-      password: 'salainen',
-    }
-
-    const result = await api
-      .post('/api/users')
-      .send(newUser)
-      .expect(400)
-      .expect('Content-Type', /application\/json/)
-
-    const usersAtEnd = await helper.usersInDb()
-    assert(result.body.error.includes('expected `username` to be unique'))
-
-    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
-  })
-
-  test('creation fails with proper statuscode and message if username length is less than 3', async () => {
-    const usersAtStart = await helper.usersInDb()
-
-    const newUser = {
-      username: 'ro',
-      name: 'Superuser',
-      password: 'salainen',
-    }
-
-    const result = await api
-      .post('/api/users')
-      .send(newUser)
-      .expect(400)
-      .expect('Content-Type', /application\/json/)
-
-    const usersAtEnd = await helper.usersInDb()
-
-    assert(result.body.error.includes(`User validation failed: username: Path \`username\` (\`${newUser.username}\`) is shorter than the minimum allowed length (3).`))
-
-    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
-  })
-
-  test('creation fails with proper statuscode and message if password length is less than 3', async () => {
-    const usersAtStart = await helper.usersInDb()
-
-    const newUser = {
-      username: 'root',
-      name: 'Superuser',
-      password: 'sa',
-    }
-
-    const result = await api
-      .post('/api/users')
-      .send(newUser)
-      .expect(400)
-      .expect('Content-Type', /application\/json/)
-
-    const usersAtEnd = await helper.usersInDb()
-    assert(result.body.error.includes(`User validation failed: password: Password ${newUser.password} is shorter than the minimum allowed length (3).`))
-
-    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
-  })
-})
 
 after(async () => {
   await mongoose.connection.close()

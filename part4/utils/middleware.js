@@ -41,7 +41,7 @@ const tokenExtractor = (request, response,  next) => {
     request.token = ''
   }
 
-  console.log('request token', request.token)
+  console.log('request token:', request.token)
 
   next()
 }
@@ -54,6 +54,7 @@ const userExtractor = (request, response, next) => {
     } else {
       request.user = decodedToken.id
     }
+    console.log('user:', decodedToken)
   }
 
   next()
