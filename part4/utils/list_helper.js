@@ -1,7 +1,3 @@
-const dummy = (blogs) => {
-  return 1
-}
-
 const totalLikes = (blogs) => {
   let result = 0
   blogs.forEach(blog => {
@@ -28,13 +24,7 @@ const favoriteBlog = (blogs) => {
   return objetoCopiado
 }
 
-const mostBlogs = (blogs) => {
-
-}
-
 module.exports = {
-  dummy,
   totalLikes,
   favoriteBlog,
-  mostBlogs
 }

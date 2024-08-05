@@ -41,13 +41,10 @@ const tokenExtractor = (request, response,  next) => {
     request.token = ''
   }
 
-  console.log('request token', request.token)
-
   next()
 }
 
 const userExtractor = (request, response, next) => {
-  console.log(request.method)
   if (request.method === 'POST' || request.method === 'DELETE'){
     const decodedToken = jwt.verify(request.token, process.env.SECRET)
     if (!decodedToken.id){

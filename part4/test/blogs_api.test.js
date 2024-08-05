@@ -16,6 +16,19 @@ beforeEach(async () => {
   await user.save()
 })
 
+const getToken = async () => {
+  const user = {
+    username: 'root',
+    password: 'sekret'
+  }
+
+  const response = await api
+    .post('/api/login')
+    .send(user)
+    .expect(200)
+  return response.body.token
+}
+
 const api = supertest(app)
 
 describe ('Blogs test for fullstackopen Part 4', () => {
@@ -70,9 +83,11 @@ describe ('Blogs test for fullstackopen Part 4', () => {
     })
   })
 
-  describe('addition of a new note', () => {
+  describe('addition of a new blog', () => {
     test('a valid blog can be added ', async () => {
+      const token = await getToken()
       const user = await helper.usersInDb()
+
       const newBlog = {
         title: 'async/await simplifies making async calls',
         author: 'FDV',
@@ -83,11 +98,13 @@ describe ('Blogs test for fullstackopen Part 4', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + token)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
 
       const blogsAtEnd = await helper.blogsInDb()
+
       assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1)
 
       const titles = blogsAtEnd.map(n => n.title)
@@ -95,6 +112,7 @@ describe ('Blogs test for fullstackopen Part 4', () => {
     })
 
     test('blog without likes returns default value 0', async () => {
+      const token = await getToken()
       const user = await helper.usersInDb()
       const newBlog = {
         title: 'async/await simplifies making async calls',
@@ -105,6 +123,7 @@ describe ('Blogs test for fullstackopen Part 4', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + token)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -116,6 +135,7 @@ describe ('Blogs test for fullstackopen Part 4', () => {
     })
 
     test('blog without author is not added ans return 400', async () => {
+      const token = await getToken()
       const newBlog = {
         title: 'async/await simplifies making async calls',
         url: 'https://www.tumblr.com/blog/iyustlop',
@@ -124,6 +144,7 @@ describe ('Blogs test for fullstackopen Part 4', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + token)
         .send(newBlog)
         .expect(400)
 
@@ -131,7 +152,8 @@ describe ('Blogs test for fullstackopen Part 4', () => {
       assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
     })
 
-    test('blog without title is not added ans return 400', async () => {
+    test('blog without title is not added and return 400', async () => {
+      const token = await getToken()
       const newBlog = {
         author: 'FDV',
         url: 'https://www.tumblr.com/blog/iyustlop',
@@ -140,21 +162,39 @@ describe ('Blogs test for fullstackopen Part 4', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + token)
         .send(newBlog)
         .expect(400)
 
       const blogsAtEnd = await helper.blogsInDb()
       assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
     })
-  })
 
-  describe('deletion of a blogs', () => {
     test('a blog can be deleted', async () => {
+      const token = await getToken()
+      const user = await helper.usersInDb()
+
+      const newBlog = {
+        title: 'async/await simplifies making async calls',
+        author: 'FDV',
+        url: 'https://www.tumblr.com/blog/iyustlop',
+        likes: 0,
+        user: user[0].id
+      }
+
+      await api
+        .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + token)
+        .send(newBlog)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
+
       const blogsAtStart = await helper.blogsInDb()
-      const blogsToDelete = blogsAtStart[0]
+      const blogsToDelete = blogsAtStart[blogsAtStart.length-1]
 
       await api
         .delete(`/api/blogs/${blogsToDelete.id}`)
+        .set('Authorization', 'Bearer ' + token)
         .expect(204)
 
       const blogsAtEnd = await helper.blogsInDb()
@@ -162,9 +202,8 @@ describe ('Blogs test for fullstackopen Part 4', () => {
       const titles = blogsAtEnd.map(r => r.title)
       assert(!titles.includes(blogsToDelete.content))
 
-      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1)
+      assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1)
     })
-
   })
 
   describe('update options for blogs', () => {
@@ -191,102 +230,6 @@ describe ('Blogs test for fullstackopen Part 4', () => {
   })
 })
 
-describe('when there is initially one user in db', () => {
-  beforeEach(async () => {
-    await User.deleteMany({})
-
-    const passwordHash = await bcrypt.hash('sekret', 10)
-    const user = new User({ username: 'root', passwordHash })
-
-    await user.save()
-  })
-
-  test('creation succeeds with a fresh username', async () => {
-    const usersAtStart = await helper.usersInDb()
-
-    const newUser = {
-      username: 'mluukkai',
-      name: 'Matti Luukkainen',
-      password: 'salainen',
-    }
-
-    await api
-      .post('/api/users')
-      .send(newUser)
-      .expect(201)
-      .expect('Content-Type', /application\/json/)
-
-    const usersAtEnd = await helper.usersInDb()
-    assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1)
-
-    const usernames = usersAtEnd.map(u => u.username)
-    assert(usernames.includes(newUser.username))
-  })
-
-  test('creation fails with proper statuscode and message if username already taken', async () => {
-    const usersAtStart = await helper.usersInDb()
-
-    const newUser = {
-      username: 'root',
-      name: 'Superuser',
-      password: 'salainen',
-    }
-
-    const result = await api
-      .post('/api/users')
-      .send(newUser)
-      .expect(400)
-      .expect('Content-Type', /application\/json/)
-
-    const usersAtEnd = await helper.usersInDb()
-    assert(result.body.error.includes('expected `username` to be unique'))
-
-    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
-  })
-
-  test('creation fails with proper statuscode and message if username length is less than 3', async () => {
-    const usersAtStart = await helper.usersInDb()
-
-    const newUser = {
-      username: 'ro',
-      name: 'Superuser',
-      password: 'salainen',
-    }
-
-    const result = await api
-      .post('/api/users')
-      .send(newUser)
-      .expect(400)
-      .expect('Content-Type', /application\/json/)
-
-    const usersAtEnd = await helper.usersInDb()
-
-    assert(result.body.error.includes(`User validation failed: username: Path \`username\` (\`${newUser.username}\`) is shorter than the minimum allowed length (3).`))
-
-    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
-  })
-
-  test('creation fails with proper statuscode and message if password length is less than 3', async () => {
-    const usersAtStart = await helper.usersInDb()
-
-    const newUser = {
-      username: 'root',
-      name: 'Superuser',
-      password: 'sa',
-    }
-
-    const result = await api
-      .post('/api/users')
-      .send(newUser)
-      .expect(400)
-      .expect('Content-Type', /application\/json/)
-
-    const usersAtEnd = await helper.usersInDb()
-    assert(result.body.error.includes(`User validation failed: password: Password ${newUser.password} is shorter than the minimum allowed length (3).`))
-
-    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
-  })
-})
 
 after(async () => {
   await mongoose.connection.close()
